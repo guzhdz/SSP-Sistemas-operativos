@@ -18,6 +18,7 @@ int tiempoTranscurrido = 0;
 int tiempoRestante = 0;
 int loteActual = 0;
 int tiempoGeneral = 0;
+int cont = 0;
 
 bool repetido(int id)
 {
@@ -172,10 +173,22 @@ void printTerminados()
 	{
 		for (Proceso proceso : terminados)
 		{
-			cout << "\tNum de programa: " << proceso.id << endl;
-			cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
-			cout << "\tResultado: " << resuelveOperacion(proceso) << endl;
-			cout << endl;
+			if(cont < 4){
+				cout << "\tNum de programa: " << proceso.id << endl;
+				cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+				cout << "\tResultado: " << resuelveOperacion(proceso) << endl;
+				cout << endl;
+			}
+			else{
+				cout<<"\t--------------------"<<endl;
+				cout << "\tNum de programa: " << proceso.id << endl;
+				cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+				cout << "\tResultado: " << resuelveOperacion(proceso) << endl;
+				cout << endl;
+				cont=0;
+			}
+
+			cont++;
 		}
 	}
 	else
@@ -220,6 +233,7 @@ int main(int argc, char *argv[])
 				printInfoLote();
 				printLoteActual();
 				printTerminados();
+				cont = 0;
 
 				tiempoTranscurrido++;
 				tiempoRestante--;
@@ -231,8 +245,10 @@ int main(int argc, char *argv[])
 				Sleep(1300);
 				system("cls");
 			}
+			//
 			tiempoTranscurrido = 0;
 			terminados.push_back(procesoEnEjecucion);
+			
 		}
 	}
 
