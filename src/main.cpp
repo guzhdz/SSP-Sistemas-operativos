@@ -274,6 +274,7 @@ int main(int argc, char *argv[])
 			loteEnEjecucion.pop_front();
 
 			tiempoRestante = procesoEnEjecucion.tme - procesoEnEjecucion.transcurrido;
+			tiempoTranscurrido = procesoEnEjecucion.transcurrido;
 			while (tiempoRestante != 0)
 			{
 				printInfoLote();
@@ -285,7 +286,12 @@ int main(int argc, char *argv[])
 
 				opcTecla = checkTecla(procesoEnEjecucion);
 
-				if (opcTecla == 1 || opcTecla == 2) // si la tecla es I o E
+				if (opcTecla == 1) // si la tecla es I o E
+				{
+					procesoEnEjecucion.transcurrido = tiempoTranscurrido;
+					break;
+				}
+				else if (opcTecla == 2)
 				{
 					break;
 				}
@@ -303,10 +309,6 @@ int main(int argc, char *argv[])
 				tiempoTranscurrido = 0;
 				procesoEnEjecucion.resultado = resuelveOperacion(procesoEnEjecucion);
 				terminados.push_back(procesoEnEjecucion);
-			}
-			else
-			{
-				tiempoTranscurrido = 0; // El tiempo transcurrido se guarda despues de una Interrupcion?
 			}
 		}
 	}
