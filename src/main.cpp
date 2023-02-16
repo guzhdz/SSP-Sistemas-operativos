@@ -169,7 +169,7 @@ void printTerminados()
 			{
 				cout << "\tNum de programa: " << proceso.id << endl;
 				cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
-				cout << "\tResultado: " << proceso.resultado << endl; // Truncar decimales
+				cout << "\tResultado: " << resuelveOperacion(proceso) << endl;
 				cout << endl;
 			}
 			else
@@ -177,7 +177,7 @@ void printTerminados()
 				cout << "\t--------------------" << endl;
 				cout << "\tNum de programa: " << proceso.id << endl;
 				cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
-				cout << "\tResultado: " << proceso.resultado << endl;
+				cout << "\tResultado: " << resuelveOperacion(proceso) << endl;
 				cout << endl;
 				cont = 0;
 			}
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
 				tiempoRestante--;
 				tiempoGeneral++;
 
-								Sleep(1000);
+				Sleep(1000);
 
 				system("cls");
 			}
