@@ -5,16 +5,18 @@ using namespace std;
 class Proceso
 {
 public:
-    string nombre;
+    int transcurrido;
     char operacion;
     float num1;
     float num2;
     int tme;
     int id;
+    string resultado;
 
     Proceso()
     {
-        this->nombre = "";
+        this->transcurrido = 0;
+        this->resultado = "";
         this->operacion = '$';
         this->num1 = 0;
         this->num2 = 0;
@@ -22,13 +24,14 @@ public:
         this->id = -1;
     }
 
-    Proceso(string nom, char ope, float n1, float n2, int t, int id)
+    Proceso(char ope, float n1, float n2, int t, int id, int transcurrido)
     {
-        this->nombre = nom;
         this->operacion = ope;
         this->num1 = n1;
         this->num2 = n2;
         this->tme = t;
         this->id = id;
+        this->resultado = "";
+        this->transcurrido = transcurrido;
     }
 };

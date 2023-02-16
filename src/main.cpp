@@ -4,7 +4,13 @@
 #include <limits>
 #include <Windows.h>
 #include <cstdlib>
+#include <stdio.h>
 #include <conio.h>
+#include <time.h>
+#include <ctime>
+#include <cmath>
+#include <math.h>
+#include <iomanip>
 #include "Proceso.h"
 
 using namespace std;
@@ -18,18 +24,9 @@ int tiempoTranscurrido = 0;
 int tiempoRestante = 0;
 int loteActual = 0;
 int tiempoGeneral = 0;
-
-bool repetido(int id)
-{
-	for (Proceso proceso : lista)
-	{
-		if (id == proceso.id)
-		{
-			return true;
-		}
-	}
-	return false;
-}
+int cont = 0;
+int id = 1;
+bool error = false;
 
 void nuevoLote()
 {
@@ -54,43 +51,42 @@ void printInfoLote()
 
 void addProceso()
 {
-	string nombre = "";
-	int id = 0;
+	int op = 0;
 	float n1 = 0;
 	float n2 = 0;
 	int TME = 0;
 	char operacion = ' ';
 
-	cin.ignore();
-	cout << "Nombre del programador" << endl;
-	getline(cin, nombre);
-
-	cout << "Que operacion deseas reealizar? (+, -, *, /, %)" << endl;
-	cin >> operacion;
-	cout << "Digita el operando 1" << endl;
-	cin >> n1;
-
-	do
+	op = rand() % 5 + 1;
+	switch (op)
 	{
-		cout << "Digita el operando 2" << endl;
-		cin >> n2;
-	} while (operacion == '/' && n2 == 0);
+	case 1:
+		operacion = '+';
+		break;
+	case 2:
+		operacion = '-';
+		break;
+	case 3:
+		operacion = '*';
+		break;
+	case 4:
+		operacion = '/';
+		break;
+	case 5:
+		operacion = '%';
+		break;
+	default:
+		break;
+	}
 
-	do
-	{
-		cout << "Digita el TME" << endl;
-		cin >> TME;
-	} while (TME <= 0);
-
-	do
-	{
-		cout << "Digita el numero de programa" << endl;
-		cin >> id;
-	} while (repetido(id));
+	n1 = rand() % 100 + 1;
+	n2 = rand() % 100 + 1;
+	TME = rand() % 12 + 5;
 
 	cout << endl;
 
-	Proceso newProceso(nombre, operacion, n1, n2, TME, id);
+	Proceso newProceso(operacion, n1, n2, TME, id++, 0);
+	// cout << newProceso.id << endl;
 	lista.push_back(newProceso);
 }
 
@@ -102,29 +98,28 @@ void calculaNumLotes()
 		nLotes++;
 }
 
-float resuelveOperacion(Proceso proceso)
+string resuelveOperacion(Proceso proceso)
 {
 	switch (proceso.operacion)
 	{
 	case '+':
-		return proceso.num1 + proceso.num2;
+		return (to_string(trunc(proceso.num1 + proceso.num2)));
 		break;
 	case '-':
-		return proceso.num1 - proceso.num2;
+		return (to_string(trunc(proceso.num1 - proceso.num2)));
 		break;
 	case '*':
-		return proceso.num1 * proceso.num2;
+		return (to_string(trunc(proceso.num1 * proceso.num2)));
 		break;
 	case '/':
-		return proceso.num1 / proceso.num2;
+		return (to_string(trunc(proceso.num1 / proceso.num2)));
 		break;
 	case '%':
-		return int(proceso.num1) % int(proceso.num2);
+		return (to_string(int(proceso.num1) % int(proceso.num2)));
 		break;
 	default:
 		break;
 	}
-	return 0;
 }
 
 void printLoteActual()
@@ -135,8 +130,7 @@ void printLoteActual()
 	{
 		for (Proceso proceso : loteEnEjecucion)
 		{
-			cout << "\tNombre del programador:" << proceso.nombre << endl;
-			cout << "\tTME:" << proceso.tme << endl;
+			cout << "\tID:" << proceso.id << "\tTME:" << proceso.tme << "\tTT: " << proceso.transcurrido << endl;
 		}
 	}
 	else
@@ -150,7 +144,6 @@ void printProcesoEnEjecucion()
 	cout << endl;
 	cout << "\t\tPROCESO EN EJECUCION" << endl;
 	cout << "\tNum de programa: " << procesoEnEjecucion.id << endl;
-	cout << "\tNombre programador: " << procesoEnEjecucion.nombre << endl;
 	cout << "\tOperacion: " << procesoEnEjecucion.num1 << procesoEnEjecucion.operacion << procesoEnEjecucion.num2 << endl;
 	cout << "\tTME: " << procesoEnEjecucion.tme << endl;
 }
@@ -172,10 +165,24 @@ void printTerminados()
 	{
 		for (Proceso proceso : terminados)
 		{
-			cout << "\tNum de programa: " << proceso.id << endl;
-			cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
-			cout << "\tResultado: " << resuelveOperacion(proceso) << endl;
-			cout << endl;
+			if (cont < 4)
+			{
+				cout << "\tNum de programa: " << proceso.id << endl;
+				cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+				cout << "\tResultado: " << proceso.resultado << endl; // Truncar decimales
+				cout << endl;
+			}
+			else
+			{
+				cout << "\t--------------------" << endl;
+				cout << "\tNum de programa: " << proceso.id << endl;
+				cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+				cout << "\tResultado: " << proceso.resultado << endl;
+				cout << endl;
+				cont = 0;
+			}
+
+			cont++;
 		}
 	}
 	else
@@ -184,24 +191,75 @@ void printTerminados()
 	}
 }
 
+void pausa()
+{
+	cout << "\tPrograma pausado, pulse 'c' para continuar" << endl;
+	char ch = ' ';
+	while (true)
+	{
+		if (kbhit())
+		{
+			ch = getch();
+			if (ch == 'c')
+			{
+				break;
+			}
+		}
+	}
+}
+
+void interrupt(Proceso proc)
+{
+	proc.transcurrido = tiempoTranscurrido - 1;
+	loteEnEjecucion.push_back(proc);
+}
+
+void err(Proceso proc)
+{
+	proc.resultado = "error";
+	terminados.push_back(proc);
+	error = true;
+}
+
+int checkTecla(Proceso proc)
+{
+	char ch = ' ';
+	if (kbhit())
+	{
+		ch = getch();
+		switch (ch)
+		{
+		case 'p':
+			pausa();
+			return 0;
+			break;
+		case 'i':
+			interrupt(proc);
+			return 1;
+			break;
+		case 'e':
+			err(proc);
+			return 2;
+			break;
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	bool nuevo = true;
+	srand(time(NULL));
+	int test = 0;
+	int nProcesos;
 	int opc = 0;
+	int opcTecla = 0;
 
 	cout << "Procesamiento por lotes" << endl;
-	cout << "Nuevo Lote" << endl;
+	cout << "Ingrese el numero de procesos a generar: ";
+	cin >> nProcesos;
 
-	while (nuevo)
+	for (int i = 0; i < nProcesos; i++)
 	{
 		addProceso();
-		cout << "Desea ingresar otro registro? (SI = 1 / NO = 2)" << endl;
-		cin >> opc;
-		if (opc == 2)
-		{
-			nuevo = false;
-		}
-		system("cls");
 	}
 
 	calculaNumLotes();
@@ -211,31 +269,49 @@ int main(int argc, char *argv[])
 		nuevoLote();
 		while (loteEnEjecucion.size() != 0)
 		{
+			error = false;
 			procesoEnEjecucion = loteEnEjecucion.front();
 			loteEnEjecucion.pop_front();
 
-			tiempoRestante = procesoEnEjecucion.tme;
+			tiempoRestante = procesoEnEjecucion.tme - procesoEnEjecucion.transcurrido;
 			while (tiempoRestante != 0)
 			{
 				printInfoLote();
 				printLoteActual();
 				printTerminados();
+				printProcesoEnEjecucion();
+				printTiempos();
+				cont = 0;
+
+				opcTecla = checkTecla(procesoEnEjecucion);
+
+				if (opcTecla == 1 || opcTecla == 2) // si la tecla es I o E
+				{
+					break;
+				}
 
 				tiempoTranscurrido++;
 				tiempoRestante--;
 				tiempoGeneral++;
 
-				printProcesoEnEjecucion();
-				printTiempos();
+								Sleep(1000);
 
-				Sleep(1300);
 				system("cls");
 			}
-			tiempoTranscurrido = 0;
-			terminados.push_back(procesoEnEjecucion);
+			if (!error && (tiempoRestante == 0))
+			{
+				tiempoTranscurrido = 0;
+				procesoEnEjecucion.resultado = resuelveOperacion(procesoEnEjecucion);
+				terminados.push_back(procesoEnEjecucion);
+			}
+			else
+			{
+				tiempoTranscurrido = 0; // El tiempo transcurrido se guarda despues de una Interrupcion?
+			}
 		}
 	}
 
+	system("cls");
 	cout << "\t\tPROCESO FINALIZADO" << endl;
 	cout << endl;
 	printInfoLote();
