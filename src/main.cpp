@@ -3,7 +3,7 @@
 #include <string>
 #include <limits>
 #include <Windows.h>
-#include <cstdlib>
+#include <stdlib.h>
 #include <stdio.h>
 #include <conio.h>
 #include <time.h>
@@ -15,11 +15,14 @@
 
 using namespace std;
 
-list<Proceso> lista = {};
-list<Proceso> loteEnEjecucion = {};
+list<Proceso> nuevos = {};
+list<Proceso> listos = {};
+list<Proceso> bloqueados = {};
 list<Proceso> terminados = {};
 Proceso procesoEnEjecucion;
-int nLotes = 0;
+Proceso procesoComodin;
+// int nLotes = 0;
+// int numNuevos = 0;
 int tiempoTranscurrido = 0;
 int tiempoRestante = 0;
 int loteActual = 0;
@@ -28,25 +31,28 @@ int cont = 0;
 int id = 1;
 bool error = false;
 
-void nuevoLote()
+int nProcesos = 0;
+int nProcesosEnMemoria = 0;
+
+void llenaMemoria()
 {
-	nLotes--;
-	loteActual++;
+	// loteActual++;
 	for (int i = 0; i < 4; i++)
 	{
-		if (lista.size() > 0)
+		if (nuevos.size() > 0)
 		{
-			loteEnEjecucion.push_back(lista.front());
-			lista.pop_front();
+			// numNuevos--;
+			listos.push_back(nuevos.front());
+			nuevos.pop_front();
 		}
 	}
 }
 
-void printInfoLote()
+void printInfoNuevos()
 {
-	cout << "\t\tINFORMACION DE LOTES" << endl;
-	cout << "\tNumero de lotes pendientes: " << nLotes << endl;
-	cout << "\tLote Actual: " << loteActual << endl;
+	cout << "\t\tINFORMACION DE PROCESOS" << endl;
+	cout << "\tNuevos: " << nuevos.size() << endl;
+	// cout << "\tLote Actual: " << loteActual << endl;
 }
 
 void addProceso()
@@ -87,16 +93,16 @@ void addProceso()
 
 	Proceso newProceso(operacion, n1, n2, TME, id++, 0);
 	// cout << newProceso.id << endl;
-	lista.push_back(newProceso);
+	nuevos.push_back(newProceso);
 }
 
-void calculaNumLotes()
-{
-	nLotes = lista.size() / 4;
+// void calculaNumLotes()
+// {
+// 	nLotes = lista.size() / 4;
 
-	if (lista.size() % 4 != 0)
-		nLotes++;
-}
+// 	if (lista.size() % 4 != 0)
+// 		nLotes++;
+// }
 
 string resuelveOperacion(Proceso proceso)
 {
@@ -122,13 +128,13 @@ string resuelveOperacion(Proceso proceso)
 	}
 }
 
-void printLoteActual()
+void printListos()
 {
 	cout << endl;
-	cout << "\t\tLOTE ACTUAL" << endl;
-	if (loteEnEjecucion.size() > 0)
+	cout << "\t\tListos" << endl;
+	if (listos.size() > 0)
 	{
-		for (Proceso proceso : loteEnEjecucion)
+		for (Proceso proceso : listos)
 		{
 			cout << "\tID:" << proceso.id << "\tTME:" << proceso.tme << "\tTT: " << proceso.transcurrido << endl;
 		}
@@ -165,24 +171,58 @@ void printTerminados()
 	{
 		for (Proceso proceso : terminados)
 		{
-			if (cont < 4)
-			{
-				cout << "\tNum de programa: " << proceso.id << endl;
-				cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
-				cout << "\tResultado: " << proceso.resultado << endl; // Truncar decimales
-				cout << endl;
-			}
-			else
-			{
-				cout << "\t--------------------" << endl;
-				cout << "\tNum de programa: " << proceso.id << endl;
-				cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
-				cout << "\tResultado: " << proceso.resultado << endl;
-				cout << endl;
-				cont = 0;
-			}
+			cout << "\tNum de programa: " << proceso.id << endl;
+			cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+			cout << "\tResultado: " << proceso.resultado << endl; // Truncar decimales
+			cout << endl;
+		}
+	}
+	else
+	{
+		cout << "\t\tVacio" << endl;
+	}
+}
 
-			cont++;
+void printTablaTerminados()
+{
+	cout << endl;
+	cout << "\t\tTABLA DE DATOS DE PROCESOS" << endl;
+	if (terminados.size() > 0)
+	{
+		for (Proceso proceso : terminados)
+		{
+			cout << "\tNum de programa: " << proceso.id << endl;
+			cout << "\tTME: " << proceso.tme << endl;
+			cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+			cout << "\tResultado: " << proceso.resultado << endl; // Truncar decimales
+
+			cout << "\tTiempo de Llegada: " << proceso.TiempoLlegada << endl;
+			cout << "\tTiempo de Finalizacion: " << proceso.TiempoFinalizacion << endl;
+			cout << "\tTiempo de Retorno: " << proceso.TiempoRetorno << endl;
+			cout << "\tTiempo de Respuesta: " << proceso.TiempoRespuesta << endl;
+			cout << "\tTiempo de Espera: " << proceso.TiempoEspera << endl;
+			cout << "\tTiempo de Servicio: " << proceso.TiempoServicio << endl;
+
+			cout << endl;
+		}
+	}
+	else
+	{
+		cout << "\t\tVacio" << endl;
+	}
+}
+
+void printBloqueados()
+{
+	cout << endl;
+	cout << "\t\tBLOQUEADOS" << endl;
+	if (bloqueados.size() > 0)
+	{
+		for (Proceso proceso : bloqueados)
+		{
+			cout << "\tNum de programa: " << proceso.id << endl;
+			cout << "\tTiempo en bloqueado: " << proceso.TiempoEnEspera << endl;
+			cout << endl;
 		}
 	}
 	else
@@ -210,15 +250,27 @@ void pausa()
 
 void interrupt(Proceso proc)
 {
-	proc.transcurrido = tiempoTranscurrido - 1;
-	loteEnEjecucion.push_back(proc);
+	// en espera 8 unidades de tiempo
+	// proc.transcurrido = tiempoTranscurrido - 1;
+	bloqueados.push_back(proc);
+	// listos.pop_front();
+	//  listos.push_back(proc);
 }
 
 void err(Proceso proc)
 {
 	proc.resultado = "error";
-	terminados.push_back(proc);
+
+	nProcesos--;
+	nProcesosEnMemoria--;
 	error = true;
+
+	proc.TiempoFinalizacion = tiempoGeneral;
+	proc.TiempoRetorno = proc.TiempoFinalizacion - proc.TiempoLlegada;
+	proc.TiempoServicio = proc.transcurrido;
+	proc.TiempoEspera = proc.TiempoRetorno - proc.TiempoServicio;
+
+	terminados.push_back(proc);
 }
 
 int checkTecla(Proceso proc)
@@ -249,11 +301,12 @@ int main(int argc, char *argv[])
 {
 	srand(time(NULL));
 	int test = 0;
-	int nProcesos;
 	int opc = 0;
 	int opcTecla = 0;
 
-	cout << "Procesamiento por lotes" << endl;
+	procesoComodin.tme = 1;
+
+	cout << "Procesamiento FCFS" << endl;
 	cout << "Ingrese el numero de procesos a generar: ";
 	cin >> nProcesos;
 
@@ -262,53 +315,109 @@ int main(int argc, char *argv[])
 		addProceso();
 	}
 
-	calculaNumLotes();
+	// calculaNumLotes();
+	// numNuevos = nProcesos;
+	llenaMemoria();
+	nProcesosEnMemoria = listos.size();
 
-	while (nLotes != 0)
+	while (nProcesos != 0)
 	{
-		nuevoLote();
-		while (loteEnEjecucion.size() != 0)
+		while (nProcesosEnMemoria != 0)
 		{
 			error = false;
-			procesoEnEjecucion = loteEnEjecucion.front();
-			loteEnEjecucion.pop_front();
+
+			if (listos.size() > 0)
+			{
+				procesoEnEjecucion = listos.front();
+				if (procesoEnEjecucion.TiempoRespuesta == -1)
+				{
+					procesoEnEjecucion.TiempoRespuesta = tiempoGeneral - procesoEnEjecucion.TiempoLlegada;
+				}
+				listos.pop_front();
+			}
+			else
+			{
+				procesoEnEjecucion = procesoComodin;
+			}
 
 			tiempoRestante = procesoEnEjecucion.tme - procesoEnEjecucion.transcurrido;
 			tiempoTranscurrido = procesoEnEjecucion.transcurrido;
-			while (tiempoRestante != 0)
+
+			while (tiempoRestante != 0) // hasta que el proceso termine o se interrumpa
 			{
-				printInfoLote();
-				printLoteActual();
+				printInfoNuevos();
+				printListos();
 				printTerminados();
+				printBloqueados();
 				printProcesoEnEjecucion();
 				printTiempos();
 				cont = 0;
 
 				opcTecla = checkTecla(procesoEnEjecucion);
 
-				if (opcTecla == 1) // si la tecla es I o E
+				if (opcTecla == 1) // si la tecla es I
 				{
-					procesoEnEjecucion.transcurrido = tiempoTranscurrido;
+					// procesoEnEjecucion.transcurrido = tiempoTranscurrido;
 					break;
 				}
-				else if (opcTecla == 2)
+				else if (opcTecla == 2) // si la tecla es E
 				{
 					break;
+				}
+
+				if (bloqueados.size() > 0) // si hay procesos bloqueados
+				{
+					list<Proceso>::iterator it = bloqueados.begin();
+					while (it != bloqueados.end())
+					{
+						if (it->TiempoEnEspera < 8)
+						{
+							it->TiempoEnEspera += 1;
+							it++;
+						}
+						else
+						{
+							it->TiempoEnEspera = 0;
+							listos.push_back(*it);
+							it++;
+							bloqueados.pop_front();
+						}
+					}
 				}
 
 				tiempoTranscurrido++;
 				tiempoRestante--;
 				tiempoGeneral++;
 
-				Sleep(1000);
+				procesoEnEjecucion.transcurrido += 1; ///
+
+				Sleep(2000);
 
 				system("cls");
 			}
 			if (!error && (tiempoRestante == 0))
 			{
-				tiempoTranscurrido = 0;
-				procesoEnEjecucion.resultado = resuelveOperacion(procesoEnEjecucion);
-				terminados.push_back(procesoEnEjecucion);
+				if (procesoEnEjecucion.id != -1)
+				{
+					procesoEnEjecucion.TiempoFinalizacion = tiempoGeneral;
+					procesoEnEjecucion.TiempoRetorno = procesoEnEjecucion.TiempoFinalizacion - procesoEnEjecucion.TiempoLlegada;
+					procesoEnEjecucion.TiempoServicio = procesoEnEjecucion.transcurrido;
+					procesoEnEjecucion.TiempoEspera = procesoEnEjecucion.TiempoRetorno - procesoEnEjecucion.TiempoServicio;
+
+					tiempoTranscurrido = 0;
+					procesoEnEjecucion.resultado = resuelveOperacion(procesoEnEjecucion);
+					terminados.push_back(procesoEnEjecucion);
+					nProcesos--;
+					nProcesosEnMemoria--;
+
+					if (nuevos.size() > 0) // meter nuevo proceso a listos
+					{
+						nuevos.front().TiempoLlegada = tiempoGeneral;
+						listos.push_back(nuevos.front());
+						nuevos.pop_front();
+						nProcesosEnMemoria++;
+					}
+				}
 			}
 		}
 	}
@@ -316,8 +425,8 @@ int main(int argc, char *argv[])
 	system("cls");
 	cout << "\t\tPROCESO FINALIZADO" << endl;
 	cout << endl;
-	printInfoLote();
-	printTerminados();
+	printInfoNuevos();
+	printTablaTerminados();
 	printTiempos();
 	system("pause");
 	return 0;
