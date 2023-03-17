@@ -105,16 +105,18 @@ void addNuevo()
 		if (procesoEnEjecucion.id == -1)
 		{
 			listos.push_back(nuevos.front());
-			// procesoEnEjecucion = listos.front();
-			// listos.pop_front();
 			nuevos.pop_front();
+			nProcesosEnMemoria++;
 		}
 		else if (listos.size() + bloqueados.size() < 3)
 		{
 			listos.push_back(nuevos.front());
 			nuevos.pop_front();
+			nProcesosEnMemoria++;
 		}
 	}
+
+	nProcesos++;
 }
 
 // void calculaNumLotes()
@@ -271,11 +273,7 @@ void pausa()
 
 void interrupt(Proceso proc)
 {
-	// en espera 8 unidades de tiempo
-	// proc.transcurrido = tiempoTranscurrido - 1;
 	bloqueados.push_back(proc);
-	// listos.pop_front();
-	//  listos.push_back(proc);
 }
 
 void err(Proceso proc)
@@ -284,14 +282,6 @@ void err(Proceso proc)
 
 	nProcesos--;
 	nProcesosEnMemoria--;
-	// meter a listos un proceso nuevo
-	if (nuevos.size() > 0)
-	{
-		nuevos.front().TiempoLlegada = tiempoGeneral;
-		listos.push_back(nuevos.front());
-		nuevos.pop_front();
-		nProcesosEnMemoria++;
-	}
 
 	error = true;
 
@@ -301,6 +291,15 @@ void err(Proceso proc)
 	proc.TiempoEspera = proc.TiempoRetorno - proc.TiempoServicio;
 
 	terminados.push_back(proc);
+
+	// meter a listos un proceso nuevo
+	if (nuevos.size() > 0)
+	{
+		nuevos.front().TiempoLlegada = tiempoGeneral;
+		listos.push_back(nuevos.front());
+		nuevos.pop_front();
+		nProcesosEnMemoria++;
+	}
 }
 
 void muestraTabla()
@@ -541,7 +540,6 @@ int main(int argc, char *argv[])
 
 				if (opcTecla == 1 || opcTecla == 2) // si la tecla es I o E
 				{
-					// procesoEnEjecucion.transcurrido = tiempoTranscurrido;
 					break;
 				}
 
@@ -571,7 +569,7 @@ int main(int argc, char *argv[])
 
 				procesoEnEjecucion.transcurrido += 1; ///
 
-				Sleep(2000);
+				Sleep(1000);
 
 				system("cls");
 			}
