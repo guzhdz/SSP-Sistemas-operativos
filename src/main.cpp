@@ -96,6 +96,27 @@ void addProceso()
 	nuevos.push_back(newProceso);
 }
 
+void addNuevo()
+{
+	addProceso();
+
+	if (listos.size() + bloqueados.size() <= 3)
+	{
+		if (procesoEnEjecucion.id == -1)
+		{
+			listos.push_back(nuevos.front());
+			// procesoEnEjecucion = listos.front();
+			// listos.pop_front();
+			nuevos.pop_front();
+		}
+		else if (listos.size() + bloqueados.size() < 3)
+		{
+			listos.push_back(nuevos.front());
+			nuevos.pop_front();
+		}
+	}
+}
+
 // void calculaNumLotes()
 // {
 // 	nLotes = lista.size() / 4;
@@ -263,6 +284,15 @@ void err(Proceso proc)
 
 	nProcesos--;
 	nProcesosEnMemoria--;
+	// meter a listos un proceso nuevo
+	if (nuevos.size() > 0)
+	{
+		nuevos.front().TiempoLlegada = tiempoGeneral;
+		listos.push_back(nuevos.front());
+		nuevos.pop_front();
+		nProcesosEnMemoria++;
+	}
+
 	error = true;
 
 	proc.TiempoFinalizacion = tiempoGeneral;
@@ -271,6 +301,152 @@ void err(Proceso proc)
 	proc.TiempoEspera = proc.TiempoRetorno - proc.TiempoServicio;
 
 	terminados.push_back(proc);
+}
+
+void muestraTabla()
+{
+	cout << endl;
+	cout << "\t\tTABLA DE DATOS DE PROCESOS" << endl;
+	if (listos.size() > 0)
+	{
+		for (Proceso proceso : listos)
+		{
+			cout << "\tNum de programa: " << proceso.id << endl;
+			cout << "\tEstado: Listo" << endl;
+			cout << "\tTME: " << proceso.tme << endl;
+			cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+			cout << "\tResultado: N/A" << endl;
+
+			cout << "\tTiempo de Llegada: " << proceso.TiempoLlegada << endl;
+			cout << "\tTiempo de Finalizacion: N/A" << endl;
+			cout << "\tTiempo de Retorno: N/A" << endl;
+
+			if (proceso.TiempoRespuesta > -1)
+				cout << "\tTiempo de Respuesta: " << proceso.TiempoRespuesta << endl;
+			else
+				cout << "\tTiempo de Respuesta: N/A" << endl;
+
+			cout << "\tTiempo de Espera: " << tiempoGeneral - proceso.transcurrido - proceso.TiempoLlegada << endl;
+			cout << "\tTiempo de Servicio: " << proceso.transcurrido << endl;
+			cout << "\tTiempo Restante en CPU: " << proceso.tme - proceso.transcurrido << endl;
+
+			cout << endl;
+		}
+	}
+
+	if (bloqueados.size() > 0)
+	{
+		for (Proceso proceso : bloqueados)
+		{
+			cout << "\tNum de programa: " << proceso.id << endl;
+			cout << "\tEstado: Bloqueado" << endl;
+			cout << "\tTME: " << proceso.tme << endl;
+			cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+			cout << "\tResultado: N/A" << endl;
+
+			cout << "\tTiempo de Llegada: " << proceso.TiempoLlegada << endl;
+			cout << "\tTiempo de Finalizacion: N/A" << endl;
+			cout << "\tTiempo de Retorno: N/A" << endl;
+
+			if (proceso.TiempoRespuesta > -1)
+				cout << "\tTiempo de Respuesta: " << proceso.TiempoRespuesta << endl;
+			else
+				cout << "\tTiempo de Respuesta: N/A" << endl;
+
+			cout << "\tTiempo de Espera: " << tiempoGeneral - proceso.transcurrido - proceso.TiempoLlegada << endl;
+			cout << "\tTiempo de Servicio: " << proceso.transcurrido << endl;
+			cout << "\tTiempo Restante en CPU: " << proceso.tme - proceso.transcurrido << endl;
+			cout << "\tTiempo Restante en Bloqueado: " << 8 - proceso.TiempoEnEspera << endl;
+
+			cout << endl;
+		}
+	}
+
+	if (nuevos.size() > 0)
+	{
+		for (Proceso proceso : nuevos)
+		{
+			cout << "\tNum de programa: " << proceso.id << endl;
+			cout << "\tEstado: Nuevo" << endl;
+			cout << "\tTME: " << proceso.tme << endl;
+			cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+			cout << "\tResultado: N/A" << endl;
+
+			cout << "\tTiempo de Llegada: N/A" << endl;
+			cout << "\tTiempo de Finalizacion: N/A" << endl;
+			cout << "\tTiempo de Retorno: N/A" << endl;
+			cout << "\tTiempo de Respuesta: N/A" << endl;
+
+			cout << "\tTiempo de Espera: N/A" << endl;
+			cout << "\tTiempo de Servicio: N/A" << endl;
+			cout << "\tTiempo Restante en CPU: " << proceso.tme << endl;
+
+			cout << endl;
+		}
+	}
+
+	if (terminados.size() > 0)
+	{
+		for (Proceso proceso : terminados)
+		{
+			cout << "\tNum de programa: " << proceso.id << endl;
+			cout << "\tEstado: Terminado" << endl;
+			if (proceso.resultado == "error")
+				cout << "\tEstado de terminado: Por error" << endl;
+			else
+				cout << "\tEstado de terminado: Normal" << endl;
+
+			cout << "\tTME: " << proceso.tme << endl;
+			cout << "\tOperacion: " << proceso.num1 << proceso.operacion << proceso.num2 << endl;
+			cout << "\tResultado: " << proceso.resultado << endl; // Truncar decimales
+
+			cout << "\tTiempo de Llegada: " << proceso.TiempoLlegada << endl;
+			cout << "\tTiempo de Finalizacion: " << proceso.TiempoFinalizacion << endl;
+			cout << "\tTiempo de Retorno: " << proceso.TiempoRetorno << endl;
+			cout << "\tTiempo de Respuesta: " << proceso.TiempoRespuesta << endl;
+			cout << "\tTiempo de Espera: " << proceso.TiempoEspera << endl;
+			cout << "\tTiempo de Servicio: " << proceso.TiempoServicio << endl;
+
+			cout << endl;
+		}
+	}
+
+	if (procesoEnEjecucion.id != -1)
+	{
+		cout << "\tNum de programa: " << procesoEnEjecucion.id << endl;
+		cout << "\tEstado: Ejecucion" << endl;
+		cout << "\tTME: " << procesoEnEjecucion.tme << endl;
+		cout << "\tOperacion: " << procesoEnEjecucion.num1 << procesoEnEjecucion.operacion << procesoEnEjecucion.num2 << endl;
+		cout << "\tResultado: N/A" << endl;
+
+		cout << "\tTiempo de Llegada: " << procesoEnEjecucion.TiempoLlegada << endl;
+		cout << "\tTiempo de Finalizacion: N/A" << endl;
+		cout << "\tTiempo de Retorno: N/A" << endl;
+
+		if (procesoEnEjecucion.TiempoRespuesta > -1)
+			cout << "\tTiempo de Respuesta: " << procesoEnEjecucion.TiempoRespuesta << endl;
+		else
+			cout << "\tTiempo de Respuesta: N/A" << endl;
+
+		cout << "\tTiempo de Espera: " << tiempoGeneral - procesoEnEjecucion.transcurrido - procesoEnEjecucion.TiempoLlegada << endl;
+		cout << "\tTiempo de Servicio: " << procesoEnEjecucion.transcurrido << endl;
+		cout << "\tTiempo Restante en CPU: " << procesoEnEjecucion.tme - procesoEnEjecucion.transcurrido << endl;
+	}
+
+	cout << "\tPrograma pausado, pulse 'c' para continuar" << endl;
+	char ch = ' ';
+
+	while (true)
+	{
+		if (kbhit())
+		{
+			ch = getch();
+			if (ch == 'c')
+			{
+				break;
+			}
+		}
+	}
 }
 
 int checkTecla(Proceso proc)
@@ -292,6 +468,14 @@ int checkTecla(Proceso proc)
 		case 'e':
 			err(proc);
 			return 2;
+			break;
+		case 'n':
+			addNuevo();
+			return 3;
+			break;
+		case 't':
+			muestraTabla();
+			return 4;
 			break;
 		}
 	}
@@ -355,13 +539,9 @@ int main(int argc, char *argv[])
 
 				opcTecla = checkTecla(procesoEnEjecucion);
 
-				if (opcTecla == 1) // si la tecla es I
+				if (opcTecla == 1 || opcTecla == 2) // si la tecla es I o E
 				{
 					// procesoEnEjecucion.transcurrido = tiempoTranscurrido;
-					break;
-				}
-				else if (opcTecla == 2) // si la tecla es E
-				{
 					break;
 				}
 
