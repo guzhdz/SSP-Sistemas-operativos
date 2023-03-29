@@ -30,9 +30,13 @@ int tiempoGeneral = 0;
 int cont = 0;
 int id = 1;
 bool error = false;
+bool bloqueado = false;
 
 int nProcesos = 0;
 int nProcesosEnMemoria = 0;
+int quantum = 0;
+int quantumInicial = 0;
+int quantumImprime = 0;
 
 void llenaMemoria()
 {
@@ -52,7 +56,9 @@ void printInfoNuevos()
 {
 	cout << "\t\tINFORMACION DE PROCESOS" << endl;
 	cout << "\tNuevos: " << nuevos.size() << endl;
-	// cout << "\tLote Actual: " << loteActual << endl;
+	cout << "\tValor del Quantum: " << quantumInicial << endl;
+	// cout << "\tValor del Quantum Acual: " << quantum << endl;
+	//  cout << "\tLote Actual: " << loteActual << endl;
 }
 
 void addProceso()
@@ -104,12 +110,14 @@ void addNuevo()
 	{
 		if (procesoEnEjecucion.id == -1)
 		{
+			nuevos.front().TiempoLlegada = tiempoGeneral;
 			listos.push_back(nuevos.front());
 			nuevos.pop_front();
 			nProcesosEnMemoria++;
 		}
 		else if (listos.size() + bloqueados.size() < 3)
 		{
+			nuevos.front().TiempoLlegada = tiempoGeneral;
 			listos.push_back(nuevos.front());
 			nuevos.pop_front();
 			nProcesosEnMemoria++;
@@ -181,6 +189,7 @@ void printTiempos()
 {
 	cout << endl;
 	cout << "\t\tTIEMPOS" << endl;
+	cout << "\tQuantum: " << quantumImprime << endl;
 	cout << "\tTiempo Transcurrido: " << tiempoTranscurrido << endl;
 	cout << "\tTiempo Restante: " << tiempoRestante << endl;
 	cout << "\tTiempo General: " << tiempoGeneral << endl;
@@ -273,6 +282,7 @@ void pausa()
 
 void interrupt(Proceso proc)
 {
+	bloqueado = true;
 	bloqueados.push_back(proc);
 }
 
@@ -492,6 +502,9 @@ int main(int argc, char *argv[])
 	cout << "Procesamiento FCFS" << endl;
 	cout << "Ingrese el numero de procesos a generar: ";
 	cin >> nProcesos;
+	cout << "Ingrese el valor del Quantum: ";
+	cin >> quantum;
+	quantumInicial = quantum;
 
 	for (int i = 0; i < nProcesos; i++)
 	{
@@ -508,6 +521,7 @@ int main(int argc, char *argv[])
 		while (nProcesosEnMemoria != 0)
 		{
 			error = false;
+			bloqueado = false;
 
 			if (listos.size() > 0)
 			{
@@ -526,7 +540,16 @@ int main(int argc, char *argv[])
 			tiempoRestante = procesoEnEjecucion.tme - procesoEnEjecucion.transcurrido;
 			tiempoTranscurrido = procesoEnEjecucion.transcurrido;
 
-			while (tiempoRestante != 0) // hasta que el proceso termine o se interrumpa
+			if (tiempoRestante < quantumInicial)
+			{
+				quantum = tiempoRestante;
+			}
+			else
+			{
+				quantum = quantumInicial;
+			}
+
+			while (quantum != 0) // hasta que el quantum termine o se interrumpa
 			{
 				printInfoNuevos();
 				printListos();
@@ -566,11 +589,12 @@ int main(int argc, char *argv[])
 				tiempoTranscurrido++;
 				tiempoRestante--;
 				tiempoGeneral++;
+				quantum--;
+				quantumImprime++;
 
 				procesoEnEjecucion.transcurrido += 1; ///
 
-				Sleep(1000);
-
+				Sleep(2000);
 				system("cls");
 			}
 			if (!error && (tiempoRestante == 0))
@@ -597,6 +621,14 @@ int main(int argc, char *argv[])
 					}
 				}
 			}
+			else if (!error && (tiempoRestante != 0))
+			{
+				if (!bloqueado)
+				{
+					listos.push_back(procesoEnEjecucion);
+				}
+			}
+			quantumImprime = 0;
 		}
 	}
 
