@@ -12,6 +12,7 @@
 #include <math.h>
 #include <iomanip>
 #include "Proceso.h"
+#include "memoria.h"
 
 using namespace std;
 
@@ -21,6 +22,8 @@ list<Proceso> bloqueados = {};
 list<Proceso> terminados = {};
 Proceso procesoEnEjecucion;
 Proceso procesoComodin;
+Memoria memoria;
+
 // int nLotes = 0;
 // int numNuevos = 0;
 int tiempoTranscurrido = 0;
@@ -40,16 +43,85 @@ int quantumImprime = 0;
 
 void llenaMemoria()
 {
-	// loteActual++;
-	for (int i = 0; i < 4; i++)
+	int pags;
+	int contador = 0;
+	for (Proceso proceso : nuevos)
 	{
-		if (nuevos.size() > 0)
+		bool mocha = false;
+		int i = 0;
+		int j = 0;
+
+		pags = proceso.tamanio / 5;
+		int residuo = proceso.tamanio % 5;
+		if (residuo > 0)
 		{
-			// numNuevos--;
-			listos.push_back(nuevos.front());
-			nuevos.pop_front();
+			pags++;
+			mocha = true;
+		}
+
+		if (pags <= memoria.espaciosLibres())
+		{
+			for (i = 0; i < pags; i++)
+			{
+				if (i == pags - 1)
+				{
+					if (mocha)
+					{
+						for (j = 0; j < sizeof(memoria.arr); j++)
+						{
+							if (memoria.arr[j].espacio == 0)
+							{
+								memoria.arr[j].espacio = residuo;
+								memoria.arr[j].estado = to_string(proceso.id);
+								break;
+							}
+						}
+					}
+					else
+					{
+						for (j = 0; j < sizeof(memoria.arr); j++)
+						{
+							if (memoria.arr[j].espacio == 0)
+							{
+								memoria.arr[j].espacio = 5;
+								memoria.arr[j].estado = to_string(proceso.id);
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					for (j = 0; j < sizeof(memoria.arr); j++)
+					{
+						if (memoria.arr[j].espacio == 0)
+						{
+							memoria.arr[j].espacio = 5;
+							memoria.arr[j].estado = to_string(proceso.id);
+							break;
+						}
+					}
+				}
+			}
+			listos.push_back(proceso);
+			contador++;
 		}
 	}
+
+	for (int k = 0; k < contador; k++)
+	{
+		nuevos.pop_front();
+	}
+
+	// for (int i = 0; i < 4; i++)
+	// {
+	// 	if (nuevos.size() > 0)
+	// 	{
+	// 		// numNuevos--;
+	// 		listos.push_back(nuevos.front());
+	// 		nuevos.pop_front();
+	// 	}
+	// }
 }
 
 void printInfoNuevos()
@@ -61,15 +133,24 @@ void printInfoNuevos()
 	//  cout << "\tLote Actual: " << loteActual << endl;
 }
 
+void printSigNuevo()
+{
+	cout << endl;
+	cout << "\t\tSiguiente Nuevo: " << endl;
+	cout << "\tID: " << nuevos.front().id << "\tTamanio: " << nuevos.front().tamanio;
+	cout << endl;
+}
+
 void addProceso()
 {
 	int op = 0;
 	float n1 = 0;
 	float n2 = 0;
 	int TME = 0;
+	int tam = 0;
 	char operacion = ' ';
 
-	op = rand() % 5 + 1;
+	op = (rand() % 5) + 1;
 	switch (op)
 	{
 	case 1:
@@ -91,13 +172,14 @@ void addProceso()
 		break;
 	}
 
-	n1 = rand() % 100 + 1;
-	n2 = rand() % 100 + 1;
-	TME = rand() % 12 + 5;
+	n1 = (rand() % 100) + 1;
+	n2 = (rand() % 100) + 1;
+	TME = (rand() % 11) + 5;
+	tam = (rand() % 19) + 6;
 
 	cout << endl;
 
-	Proceso newProceso(operacion, n1, n2, TME, id++, 0);
+	Proceso newProceso(operacion, n1, n2, TME, id++, 0, tam);
 	// cout << newProceso.id << endl;
 	nuevos.push_back(newProceso);
 }
@@ -106,23 +188,86 @@ void addNuevo()
 {
 	addProceso();
 
-	if (listos.size() + bloqueados.size() <= 3)
+	bool mocha = false;
+	int i = 0;
+	int j = 0;
+	int pags;
+
+	pags = nuevos.front().tamanio / 5;
+	int residuo = nuevos.front().tamanio % 5;
+	if (residuo > 0)
 	{
-		if (procesoEnEjecucion.id == -1)
-		{
-			nuevos.front().TiempoLlegada = tiempoGeneral;
-			listos.push_back(nuevos.front());
-			nuevos.pop_front();
-			nProcesosEnMemoria++;
-		}
-		else if (listos.size() + bloqueados.size() < 3)
-		{
-			nuevos.front().TiempoLlegada = tiempoGeneral;
-			listos.push_back(nuevos.front());
-			nuevos.pop_front();
-			nProcesosEnMemoria++;
-		}
+		pags++;
+		mocha = true;
 	}
+
+	if (pags <= memoria.espaciosLibres())
+	{
+		for (i = 0; i < pags; i++)
+		{
+			if (i == pags - 1)
+			{
+				if (mocha)
+				{
+					for (j = 0; j < sizeof(memoria.arr); j++)
+					{
+						if (memoria.arr[j].espacio == 0)
+						{
+							memoria.arr[j].espacio = residuo;
+							memoria.arr[j].estado = to_string(nuevos.front().id);
+							break;
+						}
+					}
+				}
+				else
+				{
+					for (j = 0; j < sizeof(memoria.arr); j++)
+					{
+						if (memoria.arr[j].espacio == 0)
+						{
+							memoria.arr[j].espacio = 5;
+							memoria.arr[j].estado = to_string(nuevos.front().id);
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				for (j = 0; j < sizeof(memoria.arr); j++)
+				{
+					if (memoria.arr[j].espacio == 0)
+					{
+						memoria.arr[j].espacio = 5;
+						memoria.arr[j].estado = to_string(nuevos.front().id);
+						break;
+					}
+				}
+			}
+		}
+		nuevos.front().TiempoLlegada = tiempoGeneral;
+		listos.push_back(nuevos.front());
+		nuevos.pop_front();
+		nProcesosEnMemoria++;
+	}
+
+	// if (listos.size() + bloqueados.size() <= 3)
+	// {
+	// 	if (procesoEnEjecucion.id == -1)
+	// 	{
+	// 		nuevos.front().TiempoLlegada = tiempoGeneral;
+	// 		listos.push_back(nuevos.front());
+	// 		nuevos.pop_front();
+	// 		nProcesosEnMemoria++;
+	// 	}
+	// 	else if (listos.size() + bloqueados.size() < 3)
+	// 	{
+	// 		nuevos.front().TiempoLlegada = tiempoGeneral;
+	// 		listos.push_back(nuevos.front());
+	// 		nuevos.pop_front();
+	// 		nProcesosEnMemoria++;
+	// 	}
+	// }
 
 	nProcesos++;
 }
@@ -182,6 +327,7 @@ void printProcesoEnEjecucion()
 	cout << "\t\tPROCESO EN EJECUCION" << endl;
 	cout << "\tNum de programa: " << procesoEnEjecucion.id << endl;
 	cout << "\tOperacion: " << procesoEnEjecucion.num1 << procesoEnEjecucion.operacion << procesoEnEjecucion.num2 << endl;
+	cout << "\tTamanio: " << procesoEnEjecucion.tamanio << endl;
 	cout << "\tTME: " << procesoEnEjecucion.tme << endl;
 }
 
@@ -299,16 +445,75 @@ void err(Proceso proc)
 	proc.TiempoRetorno = proc.TiempoFinalizacion - proc.TiempoLlegada;
 	proc.TiempoServicio = proc.transcurrido;
 	proc.TiempoEspera = proc.TiempoRetorno - proc.TiempoServicio;
-
+	memoria.liberarMemoria(proc.id);
 	terminados.push_back(proc);
 
 	// meter a listos un proceso nuevo
 	if (nuevos.size() > 0)
 	{
-		nuevos.front().TiempoLlegada = tiempoGeneral;
-		listos.push_back(nuevos.front());
-		nuevos.pop_front();
-		nProcesosEnMemoria++;
+		bool mocha = false;
+		int i = 0;
+		int j = 0;
+		int pags;
+
+		pags = nuevos.front().tamanio / 5;
+		int residuo = nuevos.front().tamanio % 5;
+
+		if (residuo > 0)
+		{
+			pags++;
+			mocha = true;
+		}
+
+		if (pags <= memoria.espaciosLibres())
+		{
+			for (i = 0; i < pags; i++)
+			{
+				if (i == pags - 1)
+				{
+					if (mocha)
+					{
+						for (j = 0; j < sizeof(memoria.arr); j++)
+						{
+							if (memoria.arr[j].espacio == 0)
+							{
+								memoria.arr[j].espacio = residuo;
+								memoria.arr[j].estado = to_string(nuevos.front().id);
+								break;
+							}
+						}
+					}
+					else
+					{
+						for (j = 0; j < sizeof(memoria.arr); j++)
+						{
+							if (memoria.arr[j].espacio == 0)
+							{
+								memoria.arr[j].espacio = 5;
+								memoria.arr[j].estado = to_string(nuevos.front().id);
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					for (j = 0; j < sizeof(memoria.arr); j++)
+					{
+						if (memoria.arr[j].espacio == 0)
+						{
+							memoria.arr[j].espacio = 5;
+							memoria.arr[j].estado = to_string(nuevos.front().id);
+							break;
+						}
+					}
+				}
+			}
+			nuevos.front().TiempoLlegada = tiempoGeneral;
+			listos.push_back(nuevos.front());
+			nuevos.pop_front();
+			nProcesosEnMemoria++;
+		}
 	}
 }
 
@@ -486,6 +691,10 @@ int checkTecla(Proceso proc)
 			muestraTabla();
 			return 4;
 			break;
+		case 'a':
+			pausa();
+			return 5;
+			break;
 		}
 	}
 }
@@ -493,27 +702,32 @@ int checkTecla(Proceso proc)
 int main(int argc, char *argv[])
 {
 	srand(time(NULL));
+	int i = 0;
+	int j = 0;
 	int test = 0;
 	int opc = 0;
+
 	int opcTecla = 0;
 
 	procesoComodin.tme = 1;
 
-	cout << "Procesamiento FCFS" << endl;
+	cout << "Paginacion Simple" << endl;
 	cout << "Ingrese el numero de procesos a generar: ";
 	cin >> nProcesos;
 	cout << "Ingrese el valor del Quantum: ";
 	cin >> quantum;
 	quantumInicial = quantum;
 
-	for (int i = 0; i < nProcesos; i++)
+	for (i = 0; i < nProcesos; i++)
 	{
 		addProceso();
 	}
 
 	// calculaNumLotes();
 	// numNuevos = nProcesos;
+
 	llenaMemoria();
+
 	nProcesosEnMemoria = listos.size();
 
 	while (nProcesos != 0)
@@ -552,11 +766,14 @@ int main(int argc, char *argv[])
 			while (quantum != 0) // hasta que el quantum termine o se interrumpa
 			{
 				printInfoNuevos();
+				printSigNuevo();
 				printListos();
 				printTerminados();
 				printBloqueados();
 				printProcesoEnEjecucion();
 				printTiempos();
+				memoria.printMemoria();
+
 				cont = 0;
 
 				opcTecla = checkTecla(procesoEnEjecucion);
@@ -609,15 +826,76 @@ int main(int argc, char *argv[])
 					tiempoTranscurrido = 0;
 					procesoEnEjecucion.resultado = resuelveOperacion(procesoEnEjecucion);
 					terminados.push_back(procesoEnEjecucion);
+					memoria.liberarMemoria(procesoEnEjecucion.id);
 					nProcesos--;
 					nProcesosEnMemoria--;
 
 					if (nuevos.size() > 0) // meter nuevo proceso a listos
 					{
-						nuevos.front().TiempoLlegada = tiempoGeneral;
-						listos.push_back(nuevos.front());
-						nuevos.pop_front();
-						nProcesosEnMemoria++;
+						//
+						bool mocha = false;
+						i = 0;
+						j = 0;
+						int pags;
+
+						pags = nuevos.front().tamanio / 5;
+						int residuo = nuevos.front().tamanio % 5;
+
+						if (residuo > 0)
+						{
+							pags++;
+							mocha = true;
+						}
+
+						if (pags <= memoria.espaciosLibres())
+						{
+							for (i = 0; i < pags; i++)
+							{
+								if (i == pags - 1)
+								{
+									if (mocha)
+									{
+										for (j = 0; j < sizeof(memoria.arr); j++)
+										{
+											if (memoria.arr[j].espacio == 0)
+											{
+												memoria.arr[j].espacio = residuo;
+												memoria.arr[j].estado = to_string(nuevos.front().id);
+												break;
+											}
+										}
+									}
+									else
+									{
+										for (j = 0; j < sizeof(memoria.arr); j++)
+										{
+											if (memoria.arr[j].espacio == 0)
+											{
+												memoria.arr[j].espacio = 5;
+												memoria.arr[j].estado = to_string(nuevos.front().id);
+												break;
+											}
+										}
+									}
+								}
+								else
+								{
+									for (j = 0; j < sizeof(memoria.arr); j++)
+									{
+										if (memoria.arr[j].espacio == 0)
+										{
+											memoria.arr[j].espacio = 5;
+											memoria.arr[j].estado = to_string(nuevos.front().id);
+											break;
+										}
+									}
+								}
+							}
+							nuevos.front().TiempoLlegada = tiempoGeneral;
+							listos.push_back(nuevos.front());
+							nuevos.pop_front();
+							nProcesosEnMemoria++;
+						}
 					}
 				}
 			}

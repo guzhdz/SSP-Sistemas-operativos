@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+
 using namespace std;
 
 class Proceso
@@ -19,6 +20,7 @@ public:
     float num2;
     int tme;
     int id;
+    int tamanio;
     string resultado;
 
     Proceso()
@@ -31,6 +33,7 @@ public:
         this->num2 = 0;
         this->tme = 0;
         this->id = -1;
+        this->tamanio = 0;
         this->TiempoLlegada = 0;
         this->TiempoFinalizacion = 0;
         this->TiempoRetorno = 0;
@@ -39,7 +42,7 @@ public:
         this->TiempoServicio = 0;
     }
 
-    Proceso(char ope, float n1, float n2, int t, int id, int transcurrido)
+    Proceso(char ope, float n1, float n2, int t, int id, int transcurrido, int tam)
     {
         this->operacion = ope;
         this->num1 = n1;
@@ -55,5 +58,6 @@ public:
         this->TiempoRespuesta = -1;
         this->TiempoEspera = 0;
         this->TiempoServicio = 0;
+        this->tamanio = tam;
     }
 };
