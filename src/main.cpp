@@ -11,6 +11,7 @@
 #include <cmath>
 #include <math.h>
 #include <iomanip>
+#include <fstream>
 #include "Proceso.h"
 #include "memoria.h"
 
@@ -20,6 +21,7 @@ list<Proceso> nuevos = {};
 list<Proceso> listos = {};
 list<Proceso> bloqueados = {};
 list<Proceso> terminados = {};
+list<Proceso> suspendidos = {};
 Proceso procesoEnEjecucion;
 Proceso procesoComodin;
 Memoria memoria;
@@ -130,7 +132,22 @@ void printInfoNuevos()
 	cout << "\tNuevos: " << nuevos.size() << endl;
 	cout << "\tValor del Quantum: " << quantumInicial << endl;
 	// cout << "\tValor del Quantum Acual: " << quantum << endl;
-	//  cout << "\tLote Actual: " << loteActual << endl;
+	// cout << "\tLote Actual: " << loteActual << endl;
+}
+
+void printSuspendidos()
+{
+	cout << endl;
+	cout << "\tProcesos suspendidos: " << suspendidos.size() << endl;
+	cout << "\tInfo Proximo suspendido a regresar" << endl;
+	if (suspendidos.size() > 0)
+	{
+		cout << "\tID: " << suspendidos.front().id << "  Tamanio: " << suspendidos.front().tamanio << endl;
+	}
+	else
+	{
+		cout << "\tID: -1   Tamanio:  -1 " << endl;
+	}
 }
 
 void printSigNuevo()
@@ -677,6 +694,205 @@ void muestraTabla()
 	}
 }
 
+void suspendido()
+{
+	Proceso proc;
+	bool otro = false;
+	bool mocha = false;
+	if (bloqueados.size() > 0)
+	{
+		proc = bloqueados.front();
+
+		nProcesosEnMemoria--;
+		bloqueados.pop_front();
+
+		memoria.liberarMemoria(proc.id);
+		suspendidos.push_back(proc);
+
+		// escribir proceso en el archivo
+		ofstream archivo("suspendidos.txt", ofstream::out | ofstream::app);
+		if (!archivo.is_open())
+		{
+			cout << "Error al abrir suspendidos.txt\n";
+			exit(EXIT_FAILURE);
+		}
+		else
+		{
+			archivo << "ID: " << proc.id << "\tTamanio: " << proc.tamanio << "\tTME: " << proc.tme << endl;
+		}
+
+		archivo.close();
+
+		do // Verficar si cabe un proceso nuevo en memoria
+		{
+			if (nuevos.size() > 0)
+			{
+				mocha = false;
+				int i = 0;
+				int j = 0;
+				int pags;
+
+				pags = nuevos.front().tamanio / 5;
+				int residuo = nuevos.front().tamanio % 5;
+
+				if (residuo > 0)
+				{
+					pags++;
+					mocha = true;
+				}
+
+				if (pags <= memoria.espaciosLibres())
+				{
+					for (i = 0; i < pags; i++)
+					{
+						if (i == pags - 1)
+						{
+							if (mocha)
+							{
+								for (j = 0; j < sizeof(memoria.arr); j++)
+								{
+									if (memoria.arr[j].espacio == 0)
+									{
+										memoria.arr[j].espacio = residuo;
+										memoria.arr[j].estado = to_string(nuevos.front().id);
+										break;
+									}
+								}
+							}
+							else
+							{
+								for (j = 0; j < sizeof(memoria.arr); j++)
+								{
+									if (memoria.arr[j].espacio == 0)
+									{
+										memoria.arr[j].espacio = 5;
+										memoria.arr[j].estado = to_string(nuevos.front().id);
+										break;
+									}
+								}
+							}
+						}
+						else
+						{
+							for (j = 0; j < sizeof(memoria.arr); j++)
+							{
+								if (memoria.arr[j].espacio == 0)
+								{
+									memoria.arr[j].espacio = 5;
+									memoria.arr[j].estado = to_string(nuevos.front().id);
+									break;
+								}
+							}
+						}
+					}
+					nuevos.front().TiempoLlegada = tiempoGeneral;
+					listos.push_back(nuevos.front());
+					nuevos.pop_front();
+					nProcesosEnMemoria++;
+					otro = true;
+				}
+				else
+				{
+					otro = false;
+				}
+			}
+			else
+			{
+				otro = false;
+			}
+		} while (otro);
+	}
+}
+
+void regresa()
+{
+	int mocha = false;
+	if (suspendidos.size() > 0)
+	{
+		mocha = false;
+		int i = 0;
+		int j = 0;
+		int pags;
+
+		pags = suspendidos.front().tamanio / 5;
+		int residuo = suspendidos.front().tamanio % 5;
+
+		if (residuo > 0)
+		{
+			pags++;
+			mocha = true;
+		}
+
+		if (pags <= memoria.espaciosLibres())
+		{
+			for (i = 0; i < pags; i++)
+			{
+				if (i == pags - 1)
+				{
+					if (mocha)
+					{
+						for (j = 0; j < sizeof(memoria.arr); j++)
+						{
+							if (memoria.arr[j].espacio == 0)
+							{
+								memoria.arr[j].espacio = residuo;
+								memoria.arr[j].estado = to_string(suspendidos.front().id);
+								break;
+							}
+						}
+					}
+					else
+					{
+						for (j = 0; j < sizeof(memoria.arr); j++)
+						{
+							if (memoria.arr[j].espacio == 0)
+							{
+								memoria.arr[j].espacio = 5;
+								memoria.arr[j].estado = to_string(suspendidos.front().id);
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					for (j = 0; j < sizeof(memoria.arr); j++)
+					{
+						if (memoria.arr[j].espacio == 0)
+						{
+							memoria.arr[j].espacio = 5;
+							memoria.arr[j].estado = to_string(suspendidos.front().id);
+							break;
+						}
+					}
+				}
+			}
+			listos.push_back(suspendidos.front());
+			suspendidos.pop_front();
+			nProcesosEnMemoria++;
+
+			// sacar del archivo
+			remove("suspendidos.txt");
+
+			ofstream archivo("suspendidos.txt", ofstream::out | ofstream::app);
+			if (!archivo.is_open())
+			{
+				cout << "Error al abrir suspendidos.txt\n";
+				exit(EXIT_FAILURE);
+			}
+			else
+			{
+				for (Proceso proceso : suspendidos)
+				{
+					archivo << "ID: " << proceso.id << "\tTamanio: " << proceso.tamanio << "\tTME: " << proceso.tme << endl;
+				}
+			}
+
+			archivo.close();
+		}
+	}
+}
+
 int checkTecla(Proceso proc)
 {
 	char ch = ' ';
@@ -709,12 +925,21 @@ int checkTecla(Proceso proc)
 			pausa();
 			return 5;
 			break;
+		case 's':
+			suspendido();
+			return 6;
+			break;
+		case 'r':
+			regresa();
+			return 7;
+			break;
 		}
 	}
 }
 
 int main(int argc, char *argv[])
 {
+	remove("suspendidos.txt");
 	srand(time(NULL));
 	int i = 0;
 	int j = 0;
@@ -725,7 +950,7 @@ int main(int argc, char *argv[])
 
 	procesoComodin.tme = 1;
 
-	cout << "Paginacion Simple" << endl;
+	cout << "Procesos Suspendidos" << endl;
 	cout << "Ingrese el numero de procesos a generar: ";
 	cin >> nProcesos;
 	cout << "Ingrese el valor del Quantum: ";
@@ -780,6 +1005,7 @@ int main(int argc, char *argv[])
 			while (quantum != 0) // hasta que el quantum termine o se interrumpa
 			{
 				printInfoNuevos();
+				printSuspendidos();
 				printSigNuevo();
 				printListos();
 				printTerminados();
